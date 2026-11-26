@@ -2,8 +2,8 @@ import 'dotenv/config';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import cron from 'node-cron';
 import http from 'node:http';
+import cron from 'node-cron';
 import {
   ActionRowBuilder,
   AttachmentBuilder,
@@ -509,14 +509,22 @@ async function handleApplySubmit(interaction) {
     )
     .setFooter({ text: `申請ID: ${appId}` });
 
-  const reviewChannel = await client.channels.fetch(ADMIN_REVIEW_CHANNEL_ID);
-  const msg = await reviewChannel.send({
-    embeds: [embed],
-    components: [reviewRow('a', appId)],
-    allowedMentions: { parse: [] },
-  });
-  app.reviewMessageId = msg.id;
-  saveDb();
+  try {
+    const reviewChannel = await client.channels.fetch(ADMIN_REVIEW_CHANNEL_ID);
+    const msg = await reviewChannel.send({
+      embeds: [embed],
+      components: [reviewRow('a', appId)],
+      allowedMentions: { parse: [] },
+    });
+    app.reviewMessageId = msg.id;
+    saveDb();
+  } catch (e) {
+    // 審査チャンネルへ投稿できなかった場合は申請データを取り消す（再申請できるように）
+    console.error('審査チャンネルへの投稿に失敗:', e);
+    delete db.applications[appId];
+    saveDb();
+    return interaction.editReply('⚠️ 申請を運営へ送信できませんでした。お手数ですが運営にお問い合わせください。');
+  }
 
   await interaction.editReply('✅ 申請を受け付けました。審査完了までDMにて結果をお知らせします。');
 }
@@ -1003,7 +1011,8 @@ async function cmdStats(interaction) {
   await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
-//============= Render(Web Service)用：ポートを開いて生存確認に応答する
+// Render(Web Service)用：ポートを開いて生存確認に応答する
+// Background Worker で動かす場合は、このブロックは不要です。
 http
   .createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -1012,4 +1021,5 @@ http
   .listen(process.env.PORT || 3000, () => {
     console.log('ヘルスチェック用サーバー起動');
   });
+
 client.login(DISCORD_TOKEN);
