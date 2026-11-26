@@ -1003,4 +1003,13 @@ async function cmdStats(interaction) {
   await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 }
 
+//============= Render(Web Service)用：ポートを開いて生存確認に応答する
+http
+  .createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('sirotya license bot is running');
+  })
+  .listen(process.env.PORT || 3000, () => {
+    console.log('ヘルスチェック用サーバー起動');
+  });
 client.login(DISCORD_TOKEN);
