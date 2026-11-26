@@ -1,0 +1,19 @@
+{
+  "name": "sirotya-license-manager",
+  "version": "2.0.0",
+  "description": "sirotya 許諾管理システム Discord Bot",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.65",
+    "discord.js": "^14.22.1",
+    "dotenv": "^16.4.5",
+    "node-cron": "^3.0.3"
+  }
+}
